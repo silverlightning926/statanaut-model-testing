@@ -45,18 +45,20 @@ for year in years:
         if blue3:
             blue.append(blue3)
 
-        red_win = match["winning_alliance"] == "red"
+        winner = match["winning_alliance"]
 
         if sum(player.mu for player in red) > sum(player.mu for player in blue):
-            correct_predictions += red_win
+            correct_predictions += winner == "red"
         else:
-            correct_predictions += not red_win
+            correct_predictions += winner == "blue"
         total_predictions += 1
 
-        if red_win:
+        if winner == "red":
             new_red, new_blue = model.rate(teams=[red, blue], ranks=[0, 1])
-        else:
+        elif winner == "blue":
             new_blue, new_red = model.rate(teams=[blue, red], ranks=[0, 1])
+        else:
+            new_red, new_blue = model.rate(teams=[red, blue], ranks=[1, 1])
 
         ratings[match["red1"]] = new_red[0]
         ratings[match["red2"]] = new_red[1]
