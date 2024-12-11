@@ -25,6 +25,8 @@ for year in years:
         print(f"No match file found for year {year}, skipping.")
         continue
 
+    matches["red_score"] = matches["red_score"].astype(float)
+    matches["blue_score"] = matches["blue_score"].astype(float)
     matches.dropna(subset=["red1", "red2", "blue1", "blue2"], inplace=True)
 
     correct_predictions = 0
@@ -45,7 +47,14 @@ for year in years:
         if blue3:
             blue.append(blue3)
 
-        winner = match["winning_alliance"]
+        red_score = match["red_score"]
+        blue_score = match["blue_score"]
+
+        winner = (
+            "red"
+            if red_score > blue_score
+            else "blue" if blue_score > red_score else None
+        )
 
         if sum(player.mu for player in red) > sum(player.mu for player in blue):
             correct_predictions += winner == "red"
@@ -54,11 +63,20 @@ for year in years:
         total_predictions += 1
 
         if winner == "red":
-            new_red, new_blue = model.rate(teams=[red, blue], ranks=[0, 1])
+            new_red, new_blue = model.rate(
+                teams=[red, blue],
+                ranks=[0, 1],
+            )
         elif winner == "blue":
-            new_blue, new_red = model.rate(teams=[blue, red], ranks=[0, 1])
+            new_blue, new_red = model.rate(
+                teams=[blue, red],
+                ranks=[0, 1],
+            )
         else:
-            new_red, new_blue = model.rate(teams=[red, blue], ranks=[1, 1])
+            new_red, new_blue = model.rate(
+                teams=[red, blue],
+                ranks=[1, 1],
+            )
 
         ratings[match["red1"]] = new_red[0]
         ratings[match["red2"]] = new_red[1]
