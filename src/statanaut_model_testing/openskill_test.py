@@ -1,5 +1,14 @@
 import pandas as pd
-from openskill.models import PlackettLuce, PlackettLuceRating
+from openskill.models import (
+    PlackettLuce,
+    PlackettLuceRating,
+    BradleyTerryFullRating,
+    BradleyTerryFull,
+    ThurstoneMostellerFull,
+    ThurstoneMostellerFullRating,
+    ThurstoneMostellerPart,
+    ThurstoneMostellerPartRating,
+)
 
 teams = pd.read_csv("data/teams.csv")
 
@@ -75,7 +84,7 @@ for year in years:
         else:
             new_red, new_blue = model.rate(
                 teams=[red, blue],
-                ranks=[1, 1],
+                ranks=[0, 0],
             )
 
         ratings[match["red1"]] = new_red[0]
@@ -93,3 +102,10 @@ for year in years:
         print(f"Year {year} Prediction Accuracy: {accuracy:.2f}%")
     else:
         print(f"No predictions for year {year}")
+
+sorted_ratings = sorted(ratings.items(), key=lambda x: x[1].ordinal(), reverse=True)
+top_teams = sorted_ratings[:10]
+
+print("Top 5 Teams:")
+for team, rating in top_teams:
+    print(f"Team {team}: Rating {rating}")
