@@ -103,9 +103,9 @@ for year in years:
     else:
         print(f"No predictions for year {year}")
 
-sorted_ratings = sorted(ratings.items(), key=lambda x: x[1].ordinal(), reverse=True)
-top_teams = sorted_ratings[:10]
+# sorted_ratings = sorted(ratings.items(), key=lambda x: x[1].ordinal(), reverse=True)
+# top_teams = sorted_ratings[:10]
 
-print("Top 5 Teams:")
-for team, rating in top_teams:
-    print(f"Team {team}: Rating {rating}")
+# print("Top 5 Teams:")
+# for team, rating in top_teams:
+#     print(f"Team {team}: Rating {rating}")

@@ -55,7 +55,10 @@ for i, match in two_team_matches.iterrows():
     red = [red1, red2]
     blue = [blue1, blue2]
 
-    red_win = match["winning_alliance"] == "red"
+    red_score = match["red_score"]
+    blue_score = match["blue_score"]
+
+    red_win = red_score > blue_score
 
     prediction = (red1.mu + red2.mu) > (blue1.mu + blue2.mu)
     correct_predictions += prediction == red_win
@@ -85,7 +88,10 @@ for i, match in three_team_matches.iterrows():
     red = [red1, red2, red3]
     blue = [blue1, blue2, blue3]
 
-    red_win = match["winning_alliance"] == "red"
+    red_score = match["red_score"]
+    blue_score = match["blue_score"]
+
+    red_win = red_score > blue_score
 
     prediction = (red1.mu + red2.mu + red3.mu) > (blue1.mu + blue2.mu + blue3.mu)
     correct_predictions += prediction == red_win
