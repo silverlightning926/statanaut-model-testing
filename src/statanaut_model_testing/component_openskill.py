@@ -84,7 +84,7 @@ def breakdown_match(match, year):
 
         red_endgame = red_score_breakdown["teleopPoints"] - red_teleop
         blue_endgame = blue_score_breakdown["teleopPoints"] - blue_teleop
-    else:
+    elif year == 2024:
         red_teleop = red_score_breakdown["teleopTotalNotePoints"]
         blue_teleop = blue_score_breakdown["teleopTotalNotePoints"]
 
