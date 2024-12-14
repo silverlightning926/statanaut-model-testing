@@ -63,7 +63,11 @@ for year in years_range:
         red_score = match["red_score"]
         blue_score = match["blue_score"]
 
-        winner = "red" if red_score > blue_score else "blue"
+        winner = (
+            "red"
+            if red_score > blue_score
+            else "blue" if blue_score > red_score else "tie"
+        )
 
         if winner == "red":
             baseline_predictions += 1
@@ -86,7 +90,7 @@ for year in years_range:
             correct_predictions += 1
         elif red_win_pred < blue_win_pred and winner == "blue":
             correct_predictions += 1
-        elif red_win_pred == blue_win_pred:
+        elif red_win_pred == blue_win_pred and winner == "tie":
             correct_predictions += 1
 
         new_red_ratings, new_blue_ratings = model.rate(
