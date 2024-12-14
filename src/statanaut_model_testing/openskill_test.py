@@ -28,7 +28,7 @@ for year in years_range:
         matches_df = matches_df.dropna(subset=["red1", "red2", "blue1", "blue2"])
     else:
         matches_df = matches_df.dropna(
-            subset=["red1", "red2", "blue1", "blue2", "red3", "blue3"]
+            subset=["red1", "red2", "red3", "blue1", "blue2", "blue3"]
         )
 
     matches_df = matches_df[
