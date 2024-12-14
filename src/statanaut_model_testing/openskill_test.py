@@ -114,7 +114,7 @@ for year in years_range:
     )
     print()
 
-top_teams = sorted(ratings.items(), key=lambda x: x[1].ordinal(), reverse=True)[:5]
+top_teams = sorted(ratings.items(), key=lambda x: x[1].ordinal(), reverse=True)[:10]
 
 for team, rating in top_teams:
     print(f"Team: {team}, Mu: {rating.mu}, Sigma: {((rating.sigma)/25.0) * 100:.2f}%")
