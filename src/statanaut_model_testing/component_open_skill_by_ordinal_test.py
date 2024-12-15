@@ -127,7 +127,7 @@ for year in years_range:
 
         for team_key in ratings:
             for component in ["auto", "teleop", "endgame"]:
-                ratings[team_key][component].sigma = 25 / 3.0
+                ratings[team_key][component].sigma = 25 / 2.5
 
     except FileNotFoundError:
         print(f"No data found for {year}")
