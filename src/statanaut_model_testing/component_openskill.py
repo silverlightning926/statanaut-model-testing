@@ -98,25 +98,30 @@ teams_df = pd.read_csv("data/teams.csv")
 
 ratings = {}
 ratings_over_years = {}
+rookie_year = {
+    team_key: year for team_key, year in zip(teams_df["key"], teams_df["rookie_year"])
+}
 
-for team in teams_df["key"]:
-    ratings[team] = {
-        "auto": PlackettLuceRating(name=f"{team}_auto", mu=25.0, sigma=25.0 / 3.0),
-        "teleop": PlackettLuceRating(name=f"{team}_teleop", mu=25.0, sigma=25.0 / 3.0),
+for team_key in teams_df["key"]:
+    ratings[team_key] = {
+        "auto": PlackettLuceRating(name=f"{team_key}_auto", mu=25.0, sigma=25.0 / 3.0),
+        "teleop": PlackettLuceRating(
+            name=f"{team_key}_teleop", mu=25.0, sigma=25.0 / 3.0
+        ),
         "endgame": PlackettLuceRating(
-            name=f"{team}_endgame", mu=25.0, sigma=25.0 / 3.0
+            name=f"{team_key}_endgame", mu=25.0, sigma=25.0 / 3.0
         ),
     }
-    ratings_over_years[team] = []
+    ratings_over_years[team_key] = []
 
 model = PlackettLuce()
 
 years_range = list(range(2016, 2025))
 
 for year in years_range:
-    for team in ratings:
+    for team_key in ratings:
         for component in ["auto", "teleop", "endgame"]:
-            ratings[team][component].sigma = 25.0 / 2.5
+            ratings[team_key][component].sigma = 25.0 / 2.5
 
     try:
         matches_df = pd.read_csv(
@@ -124,8 +129,9 @@ for year in years_range:
         )
     except FileNotFoundError:
         print(f"No data found for {year}")
-        for team in ratings_over_years:
-            ratings_over_years[team].append(ratings_over_years[team][-1])
+        for team_key in ratings_over_years:
+            if ratings_over_years[team_key]:
+                ratings_over_years[team_key].append(ratings_over_years[team_key][-1])
         continue
 
     matches_df = matches_df.dropna(
@@ -243,15 +249,18 @@ for year in years_range:
                 ranks=component_ranks,
             )
 
-            for i, team in enumerate(red_alliance):
-                ratings[team][component] = new_red_ratings[i]
+            for i, team_key in enumerate(red_alliance):
+                ratings[team_key][component] = new_red_ratings[i]
 
-            for i, team in enumerate(blue_alliance):
-                ratings[team][component] = new_blue_ratings[i]
+            for i, team_key in enumerate(blue_alliance):
+                ratings[team_key][component] = new_blue_ratings[i]
 
-    for team in ratings:
-        overall_mu = sum(ratings[team][component].mu for component in components)
-        ratings_over_years[team].append(overall_mu)
+    for team_key in ratings:
+        if year >= rookie_year[team_key]:
+            overall_mu = sum(
+                ratings[team_key][component].mu for component in components
+            )
+            ratings_over_years[team_key].append(overall_mu)
 
     print(
         f"TeamRank Accuracy {year}: ({(correct_predictions / len(matches_df)) * 100:.2f}%)",
@@ -266,15 +275,15 @@ top_teams = sorted(
     reverse=True,
 )[:10]
 
-for team, rating_components in top_teams:
+for team_key, rating_components in top_teams:
     total_mu = sum(rating_components[component].mu for component in components)
     print(
-        f"Team: {team}, Total Mu: {total_mu}, Components: Auto: {rating_components['auto'].mu}, Teleop: {rating_components['teleop'].mu}, Endgame: {rating_components['endgame'].mu}"
+        f"Team: {team_key}, Total Mu: {total_mu}, Components: Auto: {rating_components['auto'].mu}, Teleop: {rating_components['teleop'].mu}, Endgame: {rating_components['endgame'].mu}"
     )
 
-for team, ratings in ratings_over_years.items():
+for team_key, ratings in ratings_over_years.items():
     padded_ratings = [None] * (len(years_range) - len(ratings)) + ratings
-    ratings_over_years[team] = padded_ratings
+    ratings_over_years[team_key] = padded_ratings
 
 avg_mu_by_year = []
 for year_idx in range(len(years_range)):
@@ -287,11 +296,11 @@ for year_idx in range(len(years_range)):
 
 plt.figure(figsize=(12, 8))
 
-for team, _ in top_teams:
+for team_key, _ in top_teams:
     plt.plot(
         years_range,
-        ratings_over_years[team],
-        label=f"{teams_df.loc[teams_df['key'] == team, 'name'].values[0]} ({teams_df.loc[teams_df['key'] == team, 'number'].values[0]})",
+        ratings_over_years[team_key],
+        label=f"{teams_df.loc[teams_df['key'] == team_key, 'name'].values[0]} ({teams_df.loc[teams_df['key'] == team_key, 'number'].values[0]})",
     )
 
 plt.axhline(y=25, color="r", linestyle="--", label="Baseline (Mu=25)")
