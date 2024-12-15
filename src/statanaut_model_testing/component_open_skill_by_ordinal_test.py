@@ -1,6 +1,6 @@
 from random import sample
 import pandas as pd
-from openskill.models import PlackettLuceRating, PlackettLuce
+from openskill.models import BradleyTerryFull, BradleyTerryFullRating
 import matplotlib.pyplot as plt
 import numpy as np
 from json import loads
@@ -95,7 +95,7 @@ def breakdown_match(match, year):
     return red_auto, red_teleop, red_endgame, blue_auto, blue_teleop, blue_endgame
 
 
-teams_df = pd.read_csv("data/teams.csv")
+teams_df = pd.read_csv("data/modern_teams.csv")
 
 ratings = {}
 ratings_over_years = {}
@@ -106,17 +106,19 @@ average_ordinal_by_year = []
 
 for team_key in teams_df["key"]:
     ratings[team_key] = {
-        "auto": PlackettLuceRating(name=f"{team_key}_auto", mu=25.0, sigma=25.0 / 3.0),
-        "teleop": PlackettLuceRating(
+        "auto": BradleyTerryFullRating(
+            name=f"{team_key}_auto", mu=25.0, sigma=25.0 / 3.0
+        ),
+        "teleop": BradleyTerryFullRating(
             name=f"{team_key}_teleop", mu=25.0, sigma=25.0 / 3.0
         ),
-        "endgame": PlackettLuceRating(
+        "endgame": BradleyTerryFullRating(
             name=f"{team_key}_endgame", mu=25.0, sigma=25.0 / 3.0
         ),
     }
     ratings_over_years[team_key] = []
 
-model = PlackettLuce()
+model = BradleyTerryFull()
 
 years_range = list(range(2016, 2025))
 
@@ -243,25 +245,12 @@ for year in years_range:
                 component_red_score = red_endgame
                 component_blue_score = blue_endgame
 
-            component_winner = (
-                "red"
-                if component_red_score > component_blue_score
-                else "blue" if component_blue_score > component_red_score else "tie"
-            )
-
-            if component_winner == "red":
-                component_ranks = [0, 2]
-            elif component_winner == "blue":
-                component_ranks = [2, 0]
-            else:
-                component_ranks = [1, 1]
-
             red_ratings = [ratings[team][component] for team in red_alliance]
             blue_ratings = [ratings[team][component] for team in blue_alliance]
 
             new_red_ratings, new_blue_ratings = model.rate(
                 teams=[red_ratings, blue_ratings],
-                ranks=component_ranks,
+                scores=[component_red_score, component_blue_score],
             )
 
             for i, team_key in enumerate(red_alliance):
