@@ -119,14 +119,24 @@ model = PlackettLuce()
 years_range = list(range(2016, 2025))
 
 for year in years_range:
-    for team_key in ratings:
-        for component in ["auto", "teleop", "endgame"]:
-            ratings[team_key][component].sigma = 25.0 / 2.5
 
     try:
         matches_df = pd.read_csv(
             f"data/matches/{year}_matches.csv",
         )
+
+        for team_key in ratings:
+            if (
+                team_key in matches_df["red1"].values
+                or team_key in matches_df["red2"].values
+                or team_key in matches_df["red3"].values
+                or team_key in matches_df["blue1"].values
+                or team_key in matches_df["blue2"].values
+                or team_key in matches_df["blue3"].values
+            ):
+                for component in ["auto", "teleop", "endgame"]:
+                    ratings[team_key][component].sigma = 25 / 2.5
+
     except FileNotFoundError:
         print(f"No data found for {year}")
         for team_key in ratings_over_years:

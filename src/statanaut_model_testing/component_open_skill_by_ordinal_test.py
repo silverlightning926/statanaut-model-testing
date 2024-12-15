@@ -126,8 +126,16 @@ for year in years_range:
         )
 
         for team_key in ratings:
-            for component in ["auto", "teleop", "endgame"]:
-                ratings[team_key][component].sigma = 25 / 2.5
+            if (
+                team_key in matches_df["red1"].values
+                or team_key in matches_df["red2"].values
+                or team_key in matches_df["red3"].values
+                or team_key in matches_df["blue1"].values
+                or team_key in matches_df["blue2"].values
+                or team_key in matches_df["blue3"].values
+            ):
+                for component in ["auto", "teleop", "endgame"]:
+                    ratings[team_key][component].sigma = 25 / 2.5
 
     except FileNotFoundError:
         print(f"No data found for {year}")
