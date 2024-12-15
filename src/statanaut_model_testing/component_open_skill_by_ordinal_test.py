@@ -1,3 +1,4 @@
+from random import sample
 import pandas as pd
 from openskill.models import PlackettLuceRating, PlackettLuce
 import matplotlib.pyplot as plt
@@ -101,6 +102,7 @@ ratings_over_years = {}
 rookie_year = {
     team_key: year for team_key, year in zip(teams_df["key"], teams_df["rookie_year"])
 }
+average_ordinal_by_year = []
 
 for team_key in teams_df["key"]:
     ratings[team_key] = {
@@ -135,13 +137,16 @@ for year in years_range:
                 or team_key in matches_df["blue3"].values
             ):
                 for component in ["auto", "teleop", "endgame"]:
-                    ratings[team_key][component].sigma = 25 / 2.5
+                    ratings[team_key][component].sigma = 25.0 / 3.0
 
     except FileNotFoundError:
         print(f"No data found for {year}")
         for team_key in ratings_over_years:
             if ratings_over_years[team_key]:
                 ratings_over_years[team_key].append(ratings_over_years[team_key][-1])
+
+        average_ordinal_by_year.append(average_ordinal_by_year[-1])
+
         continue
 
     matches_df = matches_df.dropna(
@@ -265,12 +270,21 @@ for year in years_range:
             for i, team_key in enumerate(blue_alliance):
                 ratings[team_key][component] = new_blue_ratings[i]
 
+    average_ordinal = 0
+    num_teams_played = 0
+
     for team_key in ratings:
         if year >= rookie_year[team_key]:
             overall_ordinal = sum(
-                ratings[team_key][component].ordinal() for component in components
+                ratings[team_key][component].mu for component in components
             )
             ratings_over_years[team_key].append(overall_ordinal)
+
+            average_ordinal += overall_ordinal
+            num_teams_played += 1
+
+    average_ordinal /= num_teams_played
+    average_ordinal_by_year.append(average_ordinal)
 
     print(
         f"TeamRank Accuracy {year}: ({(correct_predictions / len(matches_df)) * 100:.2f}%)",
@@ -279,13 +293,17 @@ for year in years_range:
     )
     print()
 
-top_teams = sorted(
+sorted_ratings = sorted(
     ratings.items(),
-    key=lambda x: sum(x[1][component].ordinal() for component in components),
+    key=lambda x: sum(x[1][component].mu for component in components),
     reverse=True,
-)[:10]
+)
 
-for team_key, rating_components in top_teams:
+random_sample = sample(sorted_ratings, 4)
+
+teams_to_graph = sorted_ratings[:5] + random_sample + sorted_ratings[-3:]
+
+for team_key, rating_components in teams_to_graph:
     total_ordinal = sum(
         rating_components[component].ordinal() for component in components
     )
@@ -297,18 +315,10 @@ for team_key, ratings in ratings_over_years.items():
     padded_ratings = [None] * (len(years_range) - len(ratings)) + ratings
     ratings_over_years[team_key] = padded_ratings
 
-avg_ordinal_by_year = []
-for year_idx in range(len(years_range)):
-    yearly_ordinals = [
-        ratings_over_years[team][year_idx]
-        for team in ratings_over_years
-        if ratings_over_years[team][year_idx] is not None
-    ]
-    avg_ordinal_by_year.append(np.mean(yearly_ordinals) if yearly_ordinals else None)
 
 plt.figure(figsize=(12, 8))
 
-for team_key, _ in top_teams:
+for team_key, _ in teams_to_graph:
     plt.plot(
         years_range,
         ratings_over_years[team_key],
@@ -316,10 +326,9 @@ for team_key, _ in top_teams:
         label=f"{teams_df.loc[teams_df['key'] == team_key, 'name'].values[0]} ({teams_df.loc[teams_df['key'] == team_key, 'number'].values[0]})",
     )
 
-plt.axhline(y=0, color="r", linestyle="--", label="Baseline")
 plt.plot(
     years_range,
-    avg_ordinal_by_year,
+    average_ordinal_by_year,
     color="green",
     linestyle="--",
     label="Average Rating By Year",
@@ -328,8 +337,11 @@ plt.plot(
 plt.xlabel("Year")
 plt.xlim(years_range[0], years_range[-1])
 plt.xticks(years_range, rotation=45)
-plt.ylabel("Rating (Mu)")
-plt.title("Top Teams Ratings Over Time")
-plt.legend()
+plt.ylabel("Ordinal Rating (μ - 3σ)")
+plt.title("TeamRank Rating Over Time (2022-2024) | Random Sample")
+
+plt.legend(loc="upper center", bbox_to_anchor=(0.5, -0.2), ncol=3, fontsize="medium")
+
+plt.subplots_adjust(bottom=0.25)
 plt.grid(True, which="both", linestyle="--", linewidth=0.5)
 plt.show()

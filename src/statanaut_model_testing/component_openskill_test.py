@@ -271,31 +271,29 @@ for year in years_range:
 
     average_mu = 0
     num_teams_played = 0
-    teams_played = pd.concat(
-        [matches_df[col] for col in ["red1", "red2", "red3", "blue1", "blue2", "blue3"]]
+    teams_played = (
+        pd.concat(
+            [
+                matches_df[col]
+                for col in ["red1", "red2", "red3", "blue1", "blue2", "blue3"]
+            ]
+        )
+        .unique()
+        .tolist()
     )
 
     for team_key in ratings:
-        if year >= rookie_year[team_key] and team_key in teams_played.values:
-            overall_mu = sum(
-                ratings[team_key][component].mu for component in components
-            )
-            ratings_over_years[team_key].append(overall_mu)
+        overall_mu = sum(ratings[team_key][component].mu for component in components)
+        ratings_over_years[team_key].append(overall_mu)
+        if year >= rookie_year[team_key] and team_key in teams_played:
             average_mu += overall_mu
             num_teams_played += 1
 
-    num_teams_played = sum(
-        1
-        for team_key in ratings
-        if team_key in matches_df["red1"].values
-        or team_key in matches_df["red2"].values
-        or team_key in matches_df["red3"].values
-        or team_key in matches_df["blue1"].values
-        or team_key in matches_df["blue2"].values
-        or team_key in matches_df["blue3"].values
-    )
+    if num_teams_played > 0:
+        average_mu /= num_teams_played
+    else:
+        average_mu = average_mu_by_year[-1]
 
-    average_mu /= num_teams_played
     average_mu_by_year.append(average_mu)
 
     print(
@@ -304,8 +302,6 @@ for year in years_range:
         f"Delta: ({((correct_predictions - baseline_predictions) / len(matches_df)) * 100:.2f}%)",
     )
     print()
-
-print("Average mu by year: ", average_mu_by_year)
 
 sorted_ratings = sorted(
     ratings.items(),
@@ -352,12 +348,7 @@ plt.xticks(years_range, rotation=45)
 plt.ylabel("Rating (Mu)")
 plt.title("Top Teams Ratings Over Time")
 
-plt.legend(
-    loc="upper center",
-    bbox_to_anchor=(0.5, -0.2),
-    ncol=3,
-    fontsize="medium"
-)
+plt.legend(loc="upper center", bbox_to_anchor=(0.5, -0.2), ncol=3, fontsize="medium")
 
 plt.subplots_adjust(bottom=0.25)
 plt.grid(True, which="both", linestyle="--", linewidth=0.5)
