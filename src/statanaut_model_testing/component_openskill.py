@@ -300,6 +300,7 @@ for team_key, _ in top_teams:
     plt.plot(
         years_range,
         ratings_over_years[team_key],
+        marker="o",
         label=f"{teams_df.loc[teams_df['key'] == team_key, 'name'].values[0]} ({teams_df.loc[teams_df['key'] == team_key, 'number'].values[0]})",
     )
 
