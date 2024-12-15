@@ -1,3 +1,4 @@
+from random import sample
 import pandas as pd
 from openskill.models import PlackettLuceRating, PlackettLuce
 import matplotlib.pyplot as plt
@@ -101,6 +102,7 @@ ratings_over_years = {}
 rookie_year = {
     team_key: year for team_key, year in zip(teams_df["key"], teams_df["rookie_year"])
 }
+average_mu_by_year = []
 
 for team_key in teams_df["key"]:
     ratings[team_key] = {
@@ -142,6 +144,8 @@ for year in years_range:
         for team_key in ratings_over_years:
             if ratings_over_years[team_key]:
                 ratings_over_years[team_key].append(ratings_over_years[team_key][-1])
+
+        average_mu_by_year.append(average_mu_by_year[-1])
         continue
 
     matches_df = matches_df.dropna(
@@ -265,12 +269,34 @@ for year in years_range:
             for i, team_key in enumerate(blue_alliance):
                 ratings[team_key][component] = new_blue_ratings[i]
 
+    average_mu = 0
+    num_teams_played = 0
+    teams_played = pd.concat(
+        [matches_df[col] for col in ["red1", "red2", "red3", "blue1", "blue2", "blue3"]]
+    )
+
     for team_key in ratings:
-        if year >= rookie_year[team_key]:
+        if year >= rookie_year[team_key] and team_key in teams_played.values:
             overall_mu = sum(
                 ratings[team_key][component].mu for component in components
             )
             ratings_over_years[team_key].append(overall_mu)
+            average_mu += overall_mu
+            num_teams_played += 1
+
+    num_teams_played = sum(
+        1
+        for team_key in ratings
+        if team_key in matches_df["red1"].values
+        or team_key in matches_df["red2"].values
+        or team_key in matches_df["red3"].values
+        or team_key in matches_df["blue1"].values
+        or team_key in matches_df["blue2"].values
+        or team_key in matches_df["blue3"].values
+    )
+
+    average_mu /= num_teams_played
+    average_mu_by_year.append(average_mu)
 
     print(
         f"TeamRank Accuracy {year}: ({(correct_predictions / len(matches_df)) * 100:.2f}%)",
@@ -279,11 +305,17 @@ for year in years_range:
     )
     print()
 
-top_teams = sorted(
+print("Average mu by year: ", average_mu_by_year)
+
+sorted_ratings = sorted(
     ratings.items(),
     key=lambda x: sum(x[1][component].mu for component in components),
     reverse=True,
-)[:10]
+)
+
+random_sample = sample(sorted_ratings, 4)
+
+top_teams = sorted_ratings[:3] + random_sample + sorted_ratings[-3:]
 
 for team_key, rating_components in top_teams:
     total_mu = sum(rating_components[component].mu for component in components)
@@ -294,15 +326,6 @@ for team_key, rating_components in top_teams:
 for team_key, ratings in ratings_over_years.items():
     padded_ratings = [None] * (len(years_range) - len(ratings)) + ratings
     ratings_over_years[team_key] = padded_ratings
-
-avg_mu_by_year = []
-for year_idx in range(len(years_range)):
-    yearly_mus = [
-        ratings_over_years[team][year_idx]
-        for team in ratings_over_years
-        if ratings_over_years[team][year_idx] is not None
-    ]
-    avg_mu_by_year.append(np.mean(yearly_mus) if yearly_mus else None)
 
 plt.figure(figsize=(12, 8))
 
@@ -317,7 +340,7 @@ for team_key, _ in top_teams:
 plt.axhline(y=25, color="r", linestyle="--", label="Baseline (Mu=25)")
 plt.plot(
     years_range,
-    avg_mu_by_year,
+    average_mu_by_year,
     color="green",
     linestyle="--",
     label="Average Rating By Year",
@@ -328,6 +351,14 @@ plt.xlim(years_range[0], years_range[-1])
 plt.xticks(years_range, rotation=45)
 plt.ylabel("Rating (Mu)")
 plt.title("Top Teams Ratings Over Time")
-plt.legend()
+
+plt.legend(
+    loc="upper center",
+    bbox_to_anchor=(0.5, -0.2),
+    ncol=3,
+    fontsize="medium"
+)
+
+plt.subplots_adjust(bottom=0.25)
 plt.grid(True, which="both", linestyle="--", linewidth=0.5)
 plt.show()
