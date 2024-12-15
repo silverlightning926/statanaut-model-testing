@@ -290,7 +290,7 @@ sorted_ratings = sorted(
 
 random_sample = sample(sorted_ratings, 4)
 
-teams_to_graph = sorted_ratings[:5] + random_sample + sorted_ratings[-3:]
+teams_to_graph = sorted_ratings[:8] + random_sample + sorted_ratings[-3:]
 
 for team_key, rating_components in teams_to_graph:
     total_ordinal = sum(
@@ -327,7 +327,7 @@ plt.xlabel("Year")
 plt.xlim(years_range[0], years_range[-1])
 plt.xticks(years_range, rotation=45)
 plt.ylabel("Ordinal Rating (μ - 3σ)")
-plt.title("TeamRank Rating Over Time (2022-2024) | Random Sample")
+plt.title("TeamRank Rating Over Time (2022-2024) | Bradley-Terry")
 
 plt.legend(loc="upper center", bbox_to_anchor=(0.5, -0.2), ncol=4, fontsize="medium")
 
