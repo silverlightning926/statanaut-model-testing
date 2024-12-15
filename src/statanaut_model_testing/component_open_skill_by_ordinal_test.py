@@ -340,7 +340,7 @@ plt.xticks(years_range, rotation=45)
 plt.ylabel("Ordinal Rating (μ - 3σ)")
 plt.title("TeamRank Rating Over Time (2022-2024) | Random Sample")
 
-plt.legend(loc="upper center", bbox_to_anchor=(0.5, -0.2), ncol=3, fontsize="medium")
+plt.legend(loc="upper center", bbox_to_anchor=(0.5, -0.2), ncol=4, fontsize="medium")
 
 plt.subplots_adjust(bottom=0.25)
 plt.grid(True, which="both", linestyle="--", linewidth=0.5)
