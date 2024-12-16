@@ -241,77 +241,10 @@ for year in years_range:
             for component in components
         )
 
-        red_movf = [
-            sum(
-                (
-                    movfs[team][component] / movf_count[team]
-                    if movf_count[team] != 0
-                    else 0
-                )
-                for team in red_alliance
-                for component in components
-            )
-        ]
-
-        blue_movf = [
-            sum(
-                (
-                    movfs[team][component] / movf_count[team]
-                    if movf_count[team] != 0
-                    else 0
-                )
-                for team in blue_alliance
-                for component in components
-            )
-        ]
-
-        MOVF_WEIGHT = 100
-
-        average_red_movf = np.mean(red_movf) * MOVF_WEIGHT
-        average_blue_movf = np.mean(blue_movf) * MOVF_WEIGHT
-
-        red_estimated_pred = sum(
-            ratings[team][component].ordinal()
-            for team in red_alliance
-            for component in components
-        ) + (average_red_movf)
-
-        blue_estimated_pred = sum(
-            ratings[team][component].ordinal()
-            for team in blue_alliance
-            for component in components
-        ) + (average_blue_movf)
-
-        print(
-            sum(
-                ratings[team][component].ordinal()
-                for team in red_alliance
-                for component in components
-            ),
-            " + ",
-            np.mean(red_movf) * MOVF_WEIGHT,
-            " = ",
-            red_estimated_pred,
-        )
-
-        print(
-            sum(
-                ratings[team][component].ordinal()
-                for team in blue_alliance
-                for component in components
-            ),
-            " + ",
-            np.mean(blue_movf) * MOVF_WEIGHT,
-            " = ",
-            blue_estimated_pred,
-        )
-
-        print()
-
         predicted_winner = (
             "red"
-            if red_estimated_pred > blue_estimated_pred
-            else "blue" if blue_estimated_pred > red_estimated_pred else "tie"
+            if red_total_ordinal > blue_total_ordinal
+            else "blue" if blue_total_ordinal > red_total_ordinal else "tie"
         )
 
         if predicted_winner == total_winner:
@@ -355,11 +288,21 @@ for year in years_range:
 
             for i, team_key in enumerate(red_alliance):
                 ratings[team_key][component] = new_red_ratings[i]
+
+                current_rating = ratings[team_key][component]
+                current_rating.mu += 0.1 * red_movf
+                current_rating.sigma *= 1 - 0.05 * abs(red_movf)
+
                 movfs[team_key][component] += red_movf
                 movf_count[team_key] += 1
 
             for i, team_key in enumerate(blue_alliance):
                 ratings[team_key][component] = new_blue_ratings[i]
+
+                current_rating = ratings[team_key][component]
+                current_rating.mu += 0.1 * (-red_movf)
+                current_rating.sigma *= 1 - 0.05 * abs(-red_movf)
+
                 movfs[team_key][component] += -red_movf
                 movf_count[team_key] += 1
 
@@ -409,7 +352,7 @@ sorted_ratings = sorted(
 
 random_sample = sample(sorted_ratings, 4)
 
-teams_to_graph = sorted_ratings[:3] + random_sample + sorted_ratings[-3:]
+teams_to_graph = sorted_ratings[:5] + random_sample + sorted_ratings[-3:]
 
 for team_key, rating_components in teams_to_graph:
     total_ordinal = sum(
