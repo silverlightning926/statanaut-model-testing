@@ -265,7 +265,7 @@ for year in years_range:
     for team_key in ratings:
         if year >= rookie_year[team_key]:
             overall_ordinal = sum(
-                ratings[team_key][component].mu for component in components
+                ratings[team_key][component].ordinal() for component in components
             )
             ratings_over_years[team_key].append(overall_ordinal)
 
@@ -284,13 +284,13 @@ for year in years_range:
 
 sorted_ratings = sorted(
     ratings.items(),
-    key=lambda x: sum(x[1][component].mu for component in components),
+    key=lambda x: sum(x[1][component].ordinal() for component in components),
     reverse=True,
 )
 
 random_sample = sample(sorted_ratings, 4)
 
-teams_to_graph = sorted_ratings[:8] + random_sample + sorted_ratings[-3:]
+teams_to_graph = sorted_ratings[:3] + random_sample + sorted_ratings[-3:]
 
 for team_key, rating_components in teams_to_graph:
     total_ordinal = sum(
@@ -322,6 +322,8 @@ plt.plot(
     linestyle="--",
     label="Average Rating By Year",
 )
+
+plt.axhline(y=0, color="red", linestyle="--", label="Baseline")
 
 plt.xlabel("Year")
 plt.xlim(years_range[0], years_range[-1])
