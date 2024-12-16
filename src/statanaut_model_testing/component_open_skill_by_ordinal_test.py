@@ -180,6 +180,25 @@ for year in years_range:
         )
     ]
 
+    score_averages = {
+        "auto": 0.0,
+        "teleop": 0.0,
+        "endgame": 0.0,
+    }
+
+    num_of_scores = 0
+
+    movfs = {
+        team: {
+            "auto": 0.0,
+            "teleop": 0.0,
+            "endgame": 0.0,
+        }
+        for team in teams_df["key"]
+    }
+
+    movf_count = {team: 0 for team in teams_df["key"]}
+
     correct_predictions = 0
     baseline_predictions = 0
 
@@ -222,15 +241,83 @@ for year in years_range:
             for component in components
         )
 
+        red_movf = [
+            sum(
+                (
+                    movfs[team][component] / movf_count[team]
+                    if movf_count[team] != 0
+                    else 0
+                )
+                for team in red_alliance
+                for component in components
+            )
+        ]
+
+        blue_movf = [
+            sum(
+                (
+                    movfs[team][component] / movf_count[team]
+                    if movf_count[team] != 0
+                    else 0
+                )
+                for team in blue_alliance
+                for component in components
+            )
+        ]
+
+        MOVF_WEIGHT = 100
+
+        average_red_movf = np.mean(red_movf) * MOVF_WEIGHT
+        average_blue_movf = np.mean(blue_movf) * MOVF_WEIGHT
+
+        red_estimated_pred = sum(
+            ratings[team][component].ordinal()
+            for team in red_alliance
+            for component in components
+        ) + (average_red_movf)
+
+        blue_estimated_pred = sum(
+            ratings[team][component].ordinal()
+            for team in blue_alliance
+            for component in components
+        ) + (average_blue_movf)
+
+        print(
+            sum(
+                ratings[team][component].ordinal()
+                for team in red_alliance
+                for component in components
+            ),
+            " + ",
+            np.mean(red_movf) * MOVF_WEIGHT,
+            " = ",
+            red_estimated_pred,
+        )
+
+        print(
+            sum(
+                ratings[team][component].ordinal()
+                for team in blue_alliance
+                for component in components
+            ),
+            " + ",
+            np.mean(blue_movf) * MOVF_WEIGHT,
+            " = ",
+            blue_estimated_pred,
+        )
+
+        print()
+
         predicted_winner = (
             "red"
-            if red_total_ordinal > blue_total_ordinal
-            else "blue" if blue_total_ordinal > red_total_ordinal else "tie"
+            if red_estimated_pred > blue_estimated_pred
+            else "blue" if blue_estimated_pred > red_estimated_pred else "tie"
         )
 
         if predicted_winner == total_winner:
             correct_predictions += 1
 
+        num_of_scores += 2
         for component in components:
 
             if component == "auto":
@@ -253,11 +340,28 @@ for year in years_range:
                 scores=[component_red_score, component_blue_score],
             )
 
+            score_averages[component] += component_red_score
+            score_averages[component] += component_blue_score
+
+            component_score_average = score_averages[component] / num_of_scores
+
+            red_mov = (
+                component_red_score - component_blue_score
+            ) / component_score_average
+
+            rating_diff = red_total_ordinal - blue_total_ordinal
+
+            red_movf = red_mov / (1 + np.exp((-0.02) * rating_diff))
+
             for i, team_key in enumerate(red_alliance):
                 ratings[team_key][component] = new_red_ratings[i]
+                movfs[team_key][component] += red_movf
+                movf_count[team_key] += 1
 
             for i, team_key in enumerate(blue_alliance):
                 ratings[team_key][component] = new_blue_ratings[i]
+                movfs[team_key][component] += -red_movf
+                movf_count[team_key] += 1
 
     average_ordinal = 0
     num_teams_played = 0
@@ -274,6 +378,21 @@ for year in years_range:
 
     average_ordinal /= num_teams_played
     average_ordinal_by_year.append(average_ordinal)
+
+    for component in components:
+        score_averages[component] /= num_of_scores
+
+    for team in movfs:
+        if movf_count[team] == 0:
+            continue
+        for component in components:
+            movfs[team][component] /= movf_count[team]
+
+    total_movf = {
+        team: sum(movfs[team][component] for component in components) for team in movfs
+    }
+
+    sorted_teams_by_movf = sorted(total_movf.items(), key=lambda x: x[1], reverse=True)
 
     print(
         f"TeamRank Accuracy {year}: ({(correct_predictions / len(matches_df)) * 100:.2f}%)",
