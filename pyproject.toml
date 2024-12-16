@@ -2,13 +2,16 @@
 name = "statanaut-model-testing"
 version = "0.1.0"
 description = "Default template for PDM package"
-authors = [
-    {name = "Siddharth Rao", email = "siddrao.926@gmail.com"},
+authors = [{ name = "Siddharth Rao", email = "siddrao.926@gmail.com" }]
+dependencies = [
+    "pandas>=2.2.3",
+    "openskill>=6.0.1",
+    "matplotlib>=3.10.0",
+    "numpy>=2.2.0",
 ]
-dependencies = ["trueskill>=0.4.5", "pandas>=2.2.3", "openskill>=6.0.1", "matplotlib>=3.9.3", "numpy>=2.2.0", "scipy>=1.14.1", "riix>=0.0.6"]
 requires-python = "==3.13.*"
 readme = "README.md"
-license = {text = "MIT"}
+license = { text = "MIT" }
 
 
 [tool.pdm]
