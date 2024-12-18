@@ -10,7 +10,6 @@ def breakdown_match(match, year):
     blue_score_breakdown = loads(match["blue_score_breakdown"])
 
     red_auto = red_score_breakdown["autoPoints"]
-
     blue_auto = blue_score_breakdown["autoPoints"]
 
     if year == 2016:
@@ -23,8 +22,14 @@ def breakdown_match(match, year):
             + blue_score_breakdown["teleopBoulderPoints"]
         )
 
-        red_endgame = red_score_breakdown.get("teleopPoints", 0) - red_teleop
-        blue_endgame = blue_score_breakdown.get("teleopPoints", 0) - blue_teleop
+        red_endgame = red_score_breakdown["teleopPoints"] - red_teleop
+        blue_endgame = blue_score_breakdown["teleopPoints"] - blue_teleop
+
+        red_rp1 = red_score_breakdown["teleopDefensesBreached"]
+        red_rp2 = red_score_breakdown["teleopTowerCaptured"]
+
+        blue_rp1 = blue_score_breakdown["teleopDefensesBreached"]
+        blue_rp2 = blue_score_breakdown["teleopTowerCaptured"]
     elif year == 2017:
         red_teleop = (
             red_score_breakdown["teleopFuelPoints"]
@@ -37,6 +42,12 @@ def breakdown_match(match, year):
 
         red_endgame = red_score_breakdown["teleopPoints"] - red_teleop
         blue_endgame = blue_score_breakdown["teleopPoints"] - blue_teleop
+
+        red_rp1 = red_score_breakdown["kPaRankingPointAchieved"]
+        red_rp2 = red_score_breakdown["rotorRankingPointAchieved"]
+
+        blue_rp1 = blue_score_breakdown["kPaRankingPointAchieved"]
+        blue_rp2 = blue_score_breakdown["rotorRankingPointAchieved"]
     elif year == 2018:
         red_teleop = (
             red_score_breakdown["teleopOwnershipPoints"]
@@ -49,6 +60,12 @@ def breakdown_match(match, year):
 
         red_endgame = red_score_breakdown["teleopPoints"] - red_teleop
         blue_endgame = blue_score_breakdown["teleopPoints"] - blue_teleop
+
+        red_rp1 = red_score_breakdown["autoQuestRankingPoint"]
+        red_rp2 = red_score_breakdown["faceTheBossRankingPoint"]
+
+        blue_rp1 = blue_score_breakdown["autoQuestRankingPoint"]
+        blue_rp2 = blue_score_breakdown["faceTheBossRankingPoint"]
     elif year == 2019:
         red_teleop = (
             red_score_breakdown["cargoPoints"] + red_score_breakdown["hatchPanelPoints"]
@@ -60,6 +77,12 @@ def breakdown_match(match, year):
 
         red_endgame = red_score_breakdown["teleopPoints"] - red_teleop
         blue_endgame = blue_score_breakdown["teleopPoints"] - blue_teleop
+
+        red_rp1 = red_score_breakdown["completeRocketRankingPoint"]
+        red_rp2 = red_score_breakdown["habDockingRankingPoint"]
+
+        blue_rp1 = blue_score_breakdown["completeRocketRankingPoint"]
+        blue_rp2 = blue_score_breakdown["habDockingRankingPoint"]
     elif year == 2020:
         red_teleop = (
             red_score_breakdown["teleopCellPoints"]
@@ -72,18 +95,36 @@ def breakdown_match(match, year):
 
         red_endgame = red_score_breakdown["teleopPoints"] - red_teleop
         blue_endgame = blue_score_breakdown["teleopPoints"] - blue_teleop
+
+        red_rp1 = red_score_breakdown["shieldEnergizedRankingPoint"]
+        red_rp2 = red_score_breakdown["shieldOperationalRankingPoint"]
+
+        blue_rp1 = blue_score_breakdown["shieldEnergizedRankingPoint"]
+        blue_rp2 = blue_score_breakdown["shieldOperationalRankingPoint"]
     elif year == 2022:
         red_teleop = red_score_breakdown["teleopCargoPoints"]
         blue_teleop = blue_score_breakdown["teleopCargoPoints"]
 
         red_endgame = red_score_breakdown["teleopPoints"] - red_teleop
         blue_endgame = blue_score_breakdown["teleopPoints"] - blue_teleop
+
+        red_rp1 = red_score_breakdown["cargoBonusRankingPoint"]
+        red_rp2 = red_score_breakdown["hangarBonusRankingPoint"]
+
+        blue_rp1 = blue_score_breakdown["cargoBonusRankingPoint"]
+        blue_rp2 = blue_score_breakdown["hangarBonusRankingPoint"]
     elif year == 2023:
         red_teleop = red_score_breakdown["teleopGamePiecePoints"]
         blue_teleop = blue_score_breakdown["teleopGamePiecePoints"]
 
         red_endgame = red_score_breakdown["teleopPoints"] - red_teleop
         blue_endgame = blue_score_breakdown["teleopPoints"] - blue_teleop
+
+        red_rp1 = red_score_breakdown["sustainabilityBonusAchieved"]
+        red_rp2 = red_score_breakdown["activationBonusAchieved"]
+
+        blue_rp1 = blue_score_breakdown["sustainabilityBonusAchieved"]
+        blue_rp2 = blue_score_breakdown["activationBonusAchieved"]
     elif year == 2024:
         red_teleop = red_score_breakdown["teleopTotalNotePoints"]
         blue_teleop = blue_score_breakdown["teleopTotalNotePoints"]
@@ -91,7 +132,24 @@ def breakdown_match(match, year):
         red_endgame = red_score_breakdown["teleopPoints"] - red_teleop
         blue_endgame = blue_score_breakdown["teleopPoints"] - blue_teleop
 
-    return red_auto, red_teleop, red_endgame, blue_auto, blue_teleop, blue_endgame
+        red_rp1 = red_score_breakdown["melodyBonusAchieved"]
+        red_rp2 = red_score_breakdown["ensembleBonusAchieved"]
+
+        blue_rp1 = blue_score_breakdown["melodyBonusAchieved"]
+        blue_rp2 = blue_score_breakdown["ensembleBonusAchieved"]
+
+    return (
+        red_auto,
+        red_teleop,
+        red_endgame,
+        red_rp1,
+        red_rp2,
+        blue_auto,
+        blue_teleop,
+        blue_endgame,
+        blue_rp1,
+        blue_rp2,
+    )
 
 
 teams_df = pd.read_csv("data/modern_teams.csv")
@@ -113,6 +171,18 @@ for team_key in teams_df["key"]:
         ),
         "endgame": BradleyTerryFullRating(
             name=f"{team_key}_endgame", mu=25.0, sigma=25.0 / 3.0
+        ),
+        "ranking1": BradleyTerryFullRating(
+            name=f"{team_key}_ranking1", mu=25.0, sigma=25.0 / 3.0
+        ),
+        "ranking2": BradleyTerryFullRating(
+            name=f"{team_key}_ranking2", mu=25.0, sigma=25.0 / 3.0
+        ),
+        "win": BradleyTerryFullRating(
+            name=f"{team_key}_win", mu=25.0, sigma=25.0 / 3.0
+        ),
+        "foul": BradleyTerryFullRating(
+            name=f"{team_key}_foul", mu=25.0, sigma=25.0 / 3.0
         ),
     }
     ratings_over_years[team_key] = []
@@ -191,9 +261,18 @@ for year in years_range:
         if pd.notna(match["blue3"]):
             blue_alliance.append(match["blue3"])
 
-        red_auto, red_teleop, red_endgame, blue_auto, blue_teleop, blue_endgame = (
-            breakdown_match(match, year)
-        )
+        (
+            red_auto,
+            red_teleop,
+            red_endgame,
+            red_rp1,
+            red_rp2,
+            blue_auto,
+            blue_teleop,
+            blue_endgame,
+            blue_rp1,
+            blue_rp2,
+        ) = breakdown_match(match, year)
 
         total_red_score = match["red_score"]
         total_blue_score = match["blue_score"]
@@ -207,19 +286,35 @@ for year in years_range:
         if total_winner == "red":
             baseline_predictions += 1
 
-        components = ["auto", "teleop", "endgame"]
+        components = [
+            "auto",
+            "teleop",
+            "endgame",
+            "ranking1",
+            "ranking2",
+            "win",
+        ]
 
         red_total_ordinal = sum(
-            ratings[team][component].ordinal()
+            ratings[team][component].mu
             for team in red_alliance
             for component in components
         )
 
         blue_total_ordinal = sum(
-            ratings[team][component].ordinal()
+            ratings[team][component].mu
             for team in blue_alliance
             for component in components
         )
+
+        if match["match_comp_level"] != "qm":
+            for team in red_alliance:
+                red_total_ordinal -= ratings[team]["ranking1"].mu
+                red_total_ordinal -= ratings[team]["ranking2"].mu
+
+            for team in blue_alliance:
+                blue_total_ordinal -= ratings[team]["ranking1"].mu
+                blue_total_ordinal -= ratings[team]["ranking2"].mu
 
         predicted_winner = (
             "red"
@@ -240,9 +335,17 @@ for year in years_range:
                 component_red_score = red_teleop
                 component_blue_score = blue_teleop
 
-            else:
+            elif component == "endgame":
                 component_red_score = red_endgame
                 component_blue_score = blue_endgame
+
+            elif component == "ranking1":
+                component_red_score = red_rp1
+                component_blue_score = blue_rp1
+
+            elif component == "ranking2":
+                component_red_score = red_rp2
+                component_blue_score = blue_rp2
 
             red_ratings = [ratings[team][component] for team in red_alliance]
             blue_ratings = [ratings[team][component] for team in blue_alliance]
@@ -283,15 +386,11 @@ for year in years_range:
 
 sorted_ratings = sorted(
     ratings.items(),
-    key=lambda x: sum(x[1][component].ordinal() for component in components),
+    key=lambda x: sum(x[1][component].mu for component in components),
     reverse=True,
-)
+)[:10]
 
-random_sample = sample(sorted_ratings, 4)
-
-teams_to_graph = sorted_ratings[:3] + random_sample + sorted_ratings[-3:]
-
-for team_key, rating_components in teams_to_graph:
+for team_key, rating_components in sorted_ratings:
     total_ordinal = sum(
         rating_components[component].ordinal() for component in components
     )
@@ -306,7 +405,7 @@ for team_key, ratings in ratings_over_years.items():
 
 plt.figure(figsize=(12, 8))
 
-for team_key, _ in teams_to_graph:
+for team_key, _ in sorted_ratings:
     plt.plot(
         years_range,
         ratings_over_years[team_key],
@@ -327,8 +426,8 @@ plt.axhline(y=0, color="red", linestyle="--", label="Baseline")
 plt.xlabel("Year")
 plt.xlim(years_range[0], years_range[-1])
 plt.xticks(years_range, rotation=45)
-plt.ylabel("Ordinal Rating (μ - 3σ)")
-plt.title("TeamRank Rating Over Time (2022-2024) | Bradley-Terry")
+plt.ylabel("Rating (Mu)")
+plt.title("Component TeamRank")
 
 plt.legend(loc="upper center", bbox_to_anchor=(0.5, -0.2), ncol=4, fontsize="medium")
 
