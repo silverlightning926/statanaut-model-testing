@@ -149,19 +149,18 @@ for year in years_range:
             else "blue" if blue_score > red_score else "tie"
         )
 
-        red_pred, blue_pred = zip(
-            *[
-                model.predict_win(
-                    teams=[
-                        [ratings[team][component] for team in red_alliance],
-                        [ratings[team][component] for team in blue_alliance],
-                    ]
-                )
-                for component in COMPONENTS
-            ]
-        )
-        red_pred = sum(red_pred)
-        blue_pred = sum(blue_pred)
+        red_pred = 0
+        blue_pred = 0
+        for component in COMPONENTS:
+            pred = model.predict_win(
+                teams=[
+                    [ratings[team][component] for team in red_alliance],
+                    [ratings[team][component] for team in blue_alliance],
+                ]
+            )
+
+            red_pred += pred[0]
+            blue_pred += pred[1]
 
         if red_pred > blue_pred and winner == "red":
             correct_predictions += 1
@@ -204,7 +203,7 @@ for year in years_range:
                 ratings[team][component] = new_blue_component_ratings[i]
 
     print(
-        f"TeamRank Accuracy {year}: ({(correct_predictions / total_predictions) * 100:.2f}%)",
+        f"OpenSkill Accuracy {year}: ({(correct_predictions / total_predictions) * 100:.2f}%)",
         f"Baseline: ({(baseline_predictions / total_predictions) * 100:.2f}%)",
         f"Delta: ({((correct_predictions - baseline_predictions) / total_predictions) * 100:.2f}%)",
     )

@@ -190,7 +190,7 @@ for year in range(2002, 2025):
             ratings[team] = new_blue_ratings[i]
 
     print(
-        f"TeamRank Accuracy {year}: ({(correct_predictions / total_predictions) * 100:.2f}%)",
+        f"OpenSkill Accuracy {year}: ({(correct_predictions / total_predictions) * 100:.2f}%)",
         f"Baseline: ({(baseline_predictions / total_predictions) * 100:.2f}%)",
         f"Delta: ({((correct_predictions - baseline_predictions) / total_predictions) * 100:.2f}%)",
     )
