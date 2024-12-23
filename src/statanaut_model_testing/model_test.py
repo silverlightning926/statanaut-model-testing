@@ -2,6 +2,7 @@ import pandas as pd
 from json import loads
 import matplotlib.pyplot as plt
 from openskill.models import BradleyTerryFull, BradleyTerryFullRating
+from tqdm import tqdm
 
 PRINT_TEAMS = False
 NUM_TEAMS = 20
@@ -140,7 +141,7 @@ for year in range(2002, 2016):
     correct_predictions = 0
     total_predictions = 0
 
-    for event in events:
+    for event in tqdm(events, desc=f"{year} Events", leave=False):
         event_matches = matches_df[matches_df["event_key"] == event]
 
         event_teams = get_event_teams(matches_df, event)
@@ -291,7 +292,7 @@ for year in range(2016, 2025):
     correct_predictions = 0
     total_predictions = 0
 
-    for event in events:
+    for event in tqdm(events, desc=f"{year} Events", leave=False):
         event_matches = matches_df[matches_df["event_key"] == event]
 
         event_teams = get_event_teams(matches_df, event)
