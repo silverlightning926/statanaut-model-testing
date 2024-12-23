@@ -1,7 +1,11 @@
-from pprint import pprint
 import pandas as pd
 from json import loads
+import matplotlib.pyplot as plt
 from openskill.models import BradleyTerryFull, BradleyTerryFullRating
+
+PRINT_TEAMS = False
+NUM_TEAMS = 20
+SHOW_PLOT = False
 
 STARTING_MU = 25.0
 STARTING_SIGMA = 25.0 / 3.0
@@ -30,9 +34,6 @@ TEAM_BLACKLIST = [
 ]
 
 COMPONENTS = ["auto", "teleop", "endgame"]
-
-PRINT_TEAMS = False
-NUM_TEAMS = 20
 
 ratings = {}
 
@@ -401,26 +402,25 @@ for year in range(2016, 2025):
     print_top_teams(ratings, year)
 
 
-import matplotlib.pyplot as plt
+if SHOW_PLOT:
+    years = [year for year, _, _, _ in accuracy_over_time]
+    accuracy = [accuracy for _, accuracy, _, _ in accuracy_over_time]
+    baseline = [baseline for _, _, baseline, _ in accuracy_over_time]
+    delta = [delta for _, _, _, delta in accuracy_over_time]
 
-years = [year for year, _, _, _ in accuracy_over_time]
-accuracy = [accuracy for _, accuracy, _, _ in accuracy_over_time]
-baseline = [baseline for _, _, baseline, _ in accuracy_over_time]
-delta = [delta for _, _, _, delta in accuracy_over_time]
+    plt.figure(figsize=(16, 8))
 
-plt.figure(figsize=(16, 8))
+    plt.plot(years, accuracy, label="Model Accuracy", marker="o")
+    plt.plot(years, baseline, label="Baseline Accuracy", marker="o")
+    plt.plot(years, delta, label="Delta", marker="o")
 
-plt.plot(years, accuracy, label="Model Accuracy", marker="o")
-plt.plot(years, baseline, label="Baseline Accuracy", marker="o")
-plt.plot(years, delta, label="Delta", marker="o")
+    plt.xticks(sorted(set(year for year, _, _, _ in accuracy_over_time)))
 
-plt.xticks(sorted(set(year for year, _, _, _ in accuracy_over_time)))
+    plt.xlabel("Year")
+    plt.ylabel("Accuracy (%)")
 
-plt.xlabel("Year")
-plt.ylabel("Accuracy (%)")
+    plt.title("Model Accuracy Over Time")
 
-plt.title("Model Accuracy Over Time")
+    plt.legend()
 
-plt.legend()
-
-plt.show()
+    plt.show()
