@@ -141,7 +141,10 @@ for year in range(2002, 2016):
     correct_predictions = 0
     total_predictions = 0
 
-    for event in tqdm(events, desc=f"{year} Events", leave=False):
+    event_progress = tqdm(events, desc=f"{year} Events", leave=False)
+    for event in event_progress:
+        event_progress.set_description(f"{year} - ({event:<10})")
+
         event_matches = matches_df[matches_df["event_key"] == event]
 
         event_teams = get_event_teams(matches_df, event)
@@ -292,7 +295,10 @@ for year in range(2016, 2025):
     correct_predictions = 0
     total_predictions = 0
 
-    for event in tqdm(events, desc=f"{year} Events", leave=False):
+    event_progress = tqdm(events, desc=f"{year} Events", leave=False)
+    for event in event_progress:
+        event_progress.set_description(f"{year} - ({event:<10})")
+
         event_matches = matches_df[matches_df["event_key"] == event]
 
         event_teams = get_event_teams(matches_df, event)
