@@ -119,9 +119,10 @@ def print_stats(
     total_predictions: int,
 ) -> None:
     print(
-        f"{year} - ✅ ({(correct_predictions / total_predictions) * 100:.2f}%) |",
-        f"⬜ ({(baseline_predictions / total_predictions) * 100:.2f}%) |",
-        f"🔼 ({((correct_predictions - baseline_predictions) / total_predictions) * 100:.2f}%)",
+        f"{year:<4} - ✅ ({(correct_predictions / total_predictions) * 100:>6.3f}%) |",
+        f"⬜ ({(baseline_predictions / total_predictions) * 100:>6.3f}%) |",
+        f"🔼 ({((correct_predictions - baseline_predictions) / total_predictions) * 100:>6.3f}%) |",
+        f"🔢 ({total_predictions:>5} Matches)",
     )
 
 
