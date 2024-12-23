@@ -9,6 +9,7 @@ SHOW_PLOT = False
 
 STARTING_MU = 25.0
 STARTING_SIGMA = STARTING_MU / 3.0
+SIGMA_RESET = STARTING_SIGMA
 
 TEAM_BLACKLIST = [
     "frc9980",
@@ -150,7 +151,7 @@ for year in range(2002, 2016):
                 )
 
             else:
-                ratings[teams].sigma = STARTING_SIGMA
+                ratings[teams].sigma = SIGMA_RESET
 
         for _, match in event_matches.iterrows():
             red_alliance = [match["red1"], match["red2"]]
@@ -307,7 +308,7 @@ for year in range(2016, 2025):
 
             else:
                 for component in COMPONENTS:
-                    ratings[teams][component].sigma = STARTING_SIGMA
+                    ratings[teams][component].sigma = SIGMA_RESET
 
         for _, match in event_matches.iterrows():
             red_alliance = [match["red1"], match["red2"], match["red3"]]
