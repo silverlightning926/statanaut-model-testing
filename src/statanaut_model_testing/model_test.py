@@ -45,7 +45,12 @@ accuracy_over_time = []
 model = BradleyTerryFull()
 
 
-def print_top_teams(ratings: dict, year: int, num_teams: int = NUM_TEAMS) -> None:
+def print_top_teams(
+    ratings: dict,
+    year: int,
+    num_teams: int = NUM_TEAMS,
+    component_scalers: dict = None,
+) -> None:
     if not PRINT_TEAMS:
         return
 
@@ -62,13 +67,22 @@ def print_top_teams(ratings: dict, year: int, num_teams: int = NUM_TEAMS) -> Non
     else:
         sorted_ratings = sorted(
             ratings.items(),
-            key=lambda x: sum([x[1][component].mu for component in COMPONENTS]),
+            key=lambda x: sum(
+                [
+                    (x[1][component].mu * component_scalers[component])
+                    for component in COMPONENTS
+                ]
+            ),
             reverse=True,
         )
 
         for team, rating in sorted_ratings[:num_teams]:
             print(
-                f"{team} - {sum([rating[component].mu for component in COMPONENTS]):.2f} | auto: {rating['auto'].mu:.2f} | teleop: {rating['teleop'].mu:.2f} | endgame: {rating['endgame'].mu:.2f}"
+                f"{team} - "
+                f"{sum([(rating[component].mu * component_scalers[component]) for component in COMPONENTS]):.2f} |",
+                f"Auto: {rating['auto'].mu * component_scalers["auto"]:.2f} |",
+                f"Teleop: {rating['teleop'].mu * component_scalers["teleop"]:.2f} |",
+                f"Endgame: {rating['endgame'].mu * component_scalers["endgame"]:.2f}",
             )
 
 
@@ -268,6 +282,28 @@ def breakdown_match(match, year) -> tuple:
     )
 
 
+def score_count_to_component_scalers(score_count: dict) -> dict:
+    if score_count["count"] == 0:
+        return {component: 1 / 3 for component in COMPONENTS}
+
+    score_averages = {
+        component: score_count[component] / score_count["count"]
+        for component in COMPONENTS
+    }
+
+    total_score = sum(
+        [
+            score_averages["auto"],
+            score_averages["teleop"],
+            score_averages["endgame"],
+        ]
+    )
+
+    return {
+        component: score_averages[component] / total_score for component in COMPONENTS
+    }
+
+
 for year in range(2016, 2025):
     try:
         matches_df = pd.read_csv(f"../../data/matches/{year}_matches.csv")
@@ -283,6 +319,13 @@ for year in range(2016, 2025):
 
     predictions = []
     outcomes = []
+
+    score_count = {
+        "auto": 0,
+        "teleop": 0,
+        "endgame": 0,
+        "count": 0,
+    }
 
     event_progress = tqdm(events, desc=f"{year} Events", leave=False)
     for event in event_progress:
@@ -339,8 +382,9 @@ for year in range(2016, 2025):
                     ]
                 )
 
-                red_pred += pred[0]
-                blue_pred += pred[1]
+                component_scalers = score_count_to_component_scalers(score_count)
+                red_pred += pred[0] * component_scalers[component]
+                blue_pred += pred[1] * component_scalers[component]
 
             total_pred = red_pred + blue_pred
             red_pred = red_pred / total_pred
@@ -358,6 +402,9 @@ for year in range(2016, 2025):
                 elif component == "endgame":
                     component_red_score = red_endgame
                     component_blue_score = blue_endgame
+
+                score_count[component] += component_red_score
+                score_count[component] += component_blue_score
 
                 red_component_ratings = [
                     ratings[team][component] for team in red_alliance
@@ -377,6 +424,8 @@ for year in range(2016, 2025):
                 for i, team in enumerate(blue_alliance):
                     ratings[team][component] = new_blue_component_ratings[i]
 
+            score_count["count"] += 2
+
             predictions.append(red_pred)
             outcomes.append(1 if outcome == "red" else 0)
 
@@ -391,8 +440,11 @@ for year in range(2016, 2025):
     )
 
     print_stats(year, predictions, outcomes)
-    print_top_teams(ratings, year)
-
+    print_top_teams(
+        ratings,
+        year,
+        component_scalers=score_count_to_component_scalers(score_count),
+    )
 
 if SHOW_PLOT:
     years = [year for year, _, _, _ in accuracy_over_time]
