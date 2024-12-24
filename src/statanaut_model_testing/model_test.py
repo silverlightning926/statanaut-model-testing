@@ -119,8 +119,9 @@ def print_stats(
     predictions: list,
     outcomes: list,
 ) -> None:
+    binary_predictions = [1 if pred > 0.5 else 0 for pred in predictions]
     print(
-        f"{year:<4} - ✅ {accuracy_score(outcomes, predictions) * 100:.2f}% | "
+        f"{year:<4} - ✅ {accuracy_score(outcomes, binary_predictions) * 100:.2f}% | "
         f"📊 {brier_score_loss(outcomes, predictions):.2f}",
         f"| ⬜ {(sum(outcomes)/len(outcomes)) * 100:.2f}%",
         f"| 🔢 {len(outcomes)} Matches",
@@ -196,7 +197,7 @@ for year in range(2002, 2016):
             for i, team in enumerate(blue_alliance):
                 ratings[team] = new_blue_ratings[i]
 
-            predictions.append(1 if red_pred > blue_pred else 0)
+            predictions.append(red_pred)
             outcomes.append(1 if winner == "red" else 0)
 
     print_stats(year, predictions, outcomes)
@@ -366,7 +367,7 @@ for year in range(2016, 2025):
                 for i, team in enumerate(blue_alliance):
                     ratings[team][component] = new_blue_component_ratings[i]
 
-            predictions.append(1 if red_pred > blue_pred else 0)
+            predictions.append(red_pred)
             outcomes.append(1 if outcome == "red" else 0)
 
     print_stats(year, predictions, outcomes)
