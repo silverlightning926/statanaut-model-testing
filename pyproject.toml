@@ -9,6 +9,7 @@ dependencies = [
     "matplotlib>=3.10.0",
     "numpy>=2.2.1",
     "tqdm>=4.67.1",
+    "scikit-learn>=1.6.0",
 ]
 requires-python = "==3.13.*"
 readme = "README.md"

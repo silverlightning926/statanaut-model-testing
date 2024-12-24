@@ -3,6 +3,7 @@ from json import loads
 import matplotlib.pyplot as plt
 from openskill.models import BradleyTerryFull, BradleyTerryFullRating
 from tqdm import tqdm
+from sklearn.metrics import accuracy_score, brier_score_loss
 
 PRINT_TEAMS = False
 NUM_TEAMS = 20
@@ -115,15 +116,14 @@ def filter_matches(matches_df: pd.DataFrame, year: int) -> pd.DataFrame:
 
 def print_stats(
     year: int,
-    correct_predictions: int,
-    baseline_predictions: int,
-    total_predictions: int,
+    predictions: list,
+    outcomes: list,
 ) -> None:
     print(
-        f"{year:<4} - ✅ ({(correct_predictions / total_predictions) * 100:>6.3f}%) |",
-        f"⬜ ({(baseline_predictions / total_predictions) * 100:>6.3f}%) |",
-        f"🔼 ({((correct_predictions - baseline_predictions) / total_predictions) * 100:>6.3f}%) |",
-        f"🔢 ({total_predictions:>5} Matches)",
+        f"{year:<4} - ✅ {accuracy_score(outcomes, predictions) * 100:.2f}% | "
+        f"📊 {brier_score_loss(outcomes, predictions):.2f}",
+        f"| ⬜ {(sum(outcomes)/len(outcomes)) * 100:.2f}%",
+        f"| 🔢 {len(outcomes)} Matches",
     )
 
 
@@ -137,9 +137,8 @@ for year in range(2002, 2016):
 
     events = get_events(matches_df)
 
-    baseline_predictions = 0
-    correct_predictions = 0
-    total_predictions = 0
+    predictions = []
+    outcomes = []
 
     event_progress = tqdm(events, desc=f"{year} Events", leave=False)
     for event in event_progress:
@@ -186,16 +185,6 @@ for year in range(2002, 2016):
                 ]
             )
 
-            total_predictions += 1
-            if winner == "red":
-                baseline_predictions += 1
-            if red_pred > blue_pred and winner == "red":
-                correct_predictions += 1
-            elif red_pred < blue_pred and winner == "blue":
-                correct_predictions += 1
-            elif red_pred == blue_pred and winner == "tie":
-                correct_predictions += 1
-
             new_red_ratings, new_blue_ratings = model.rate(
                 teams=[red_ratings, blue_ratings],
                 scores=[red_score, blue_score],
@@ -207,20 +196,10 @@ for year in range(2002, 2016):
             for i, team in enumerate(blue_alliance):
                 ratings[team] = new_blue_ratings[i]
 
-    accuracy_over_time.append(
-        (
-            year,
-            ((correct_predictions / total_predictions) * 100),
-            ((baseline_predictions / total_predictions) * 100),
-            (
-                (correct_predictions / total_predictions)
-                - (baseline_predictions / total_predictions)
-            )
-            * 100,
-        )
-    )
+            predictions.append(1 if red_pred > blue_pred else 0)
+            outcomes.append(1 if winner == "red" else 0)
 
-    print_stats(year, correct_predictions, baseline_predictions, total_predictions)
+    print_stats(year, predictions, outcomes)
     print_top_teams(ratings, year)
 
 for team in ratings:
@@ -291,9 +270,8 @@ for year in range(2016, 2025):
 
     events = get_events(matches_df)
 
-    baseline_predictions = 0
-    correct_predictions = 0
-    total_predictions = 0
+    predictions = []
+    outcomes = []
 
     event_progress = tqdm(events, desc=f"{year} Events", leave=False)
     for event in event_progress:
@@ -353,15 +331,9 @@ for year in range(2016, 2025):
                 red_pred += pred[0]
                 blue_pred += pred[1]
 
-            total_predictions += 1
-            if outcome == "red":
-                baseline_predictions += 1
-            if red_pred > blue_pred and outcome == "red":
-                correct_predictions += 1
-            elif red_pred < blue_pred and outcome == "blue":
-                correct_predictions += 1
-            elif red_pred == blue_pred and outcome == "tie":
-                correct_predictions += 1
+            total_pred = red_pred + blue_pred
+            red_pred = red_pred / total_pred
+            blue_pred = blue_pred / total_pred
 
             for component in COMPONENTS:
                 if component == "auto":
@@ -394,20 +366,10 @@ for year in range(2016, 2025):
                 for i, team in enumerate(blue_alliance):
                     ratings[team][component] = new_blue_component_ratings[i]
 
-    accuracy_over_time.append(
-        (
-            year,
-            ((correct_predictions / total_predictions) * 100),
-            ((baseline_predictions / total_predictions) * 100),
-            (
-                (correct_predictions / total_predictions)
-                - (baseline_predictions / total_predictions)
-            )
-            * 100,
-        )
-    )
+            predictions.append(1 if red_pred > blue_pred else 0)
+            outcomes.append(1 if outcome == "red" else 0)
 
-    print_stats(year, correct_predictions, baseline_predictions, total_predictions)
+    print_stats(year, predictions, outcomes)
     print_top_teams(ratings, year)
 
 
