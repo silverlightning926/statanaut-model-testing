@@ -409,7 +409,7 @@ if SHOW_PLOT:
     plt.xlabel("Year")
     plt.xticks(years, rotation=45)
 
-    plt.ylabel("%")
+    plt.ylabel("Percentage (%)")
 
     plt.grid()
 
