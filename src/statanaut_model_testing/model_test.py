@@ -171,11 +171,6 @@ def calculate_oprs(event_matches_df: pd.DataFrame) -> dict:
     return oprs
 
 
-def calculate_coprs(event_matches_df: pd.DataFrame) -> dict:
-    # TODO: Implement COPR, just OPR for mulitple components
-    pass
-
-
 for year in range(2002, 2016):
     try:
         matches_df = pd.read_csv(f"../../data/matches/{year}_matches.csv")
@@ -418,8 +413,12 @@ for year in range(2016, 2025):
             elif red_pred == blue_pred and outcome == "tie":
                 correct_predictions += 1
 
+            oprs = calculate_oprs(event_matches_df=event_matches.loc[:i])
+
+            red_oprs = [oprs[team] for team in red_alliance]
+            blue_oprs = [oprs[team] for team in blue_alliance]
+
             for component in COMPONENTS:
-                coprs = calculate_coprs(event_matches_df=event_matches.loc[:i])
 
                 if component == "auto":
                     component_red_score = red_auto
@@ -443,6 +442,7 @@ for year in range(2016, 2025):
                 new_red_component_ratings, new_blue_component_ratings = model.rate(
                     teams=[red_component_ratings, blue_component_ratings],
                     scores=[component_red_score, component_blue_score],
+                    weights=[red_oprs, blue_oprs],
                 )
 
                 for i, team in enumerate(red_alliance):
