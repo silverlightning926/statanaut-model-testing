@@ -1,5 +1,5 @@
 from typing import Optional
-from rating import Rating
+from .rating import Rating
 import numpy as np
 from scipy.stats import norm
 
