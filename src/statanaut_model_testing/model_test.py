@@ -400,7 +400,7 @@ if SHOW_PLOT:
     baselines = [baseline for _, _, baseline, _ in accuracy_over_time]
     briers = [brier for _, _, _, brier in accuracy_over_time]
 
-    plt.figure(figsize=(18, 9))
+    plt.figure(figsize=(14, 7))
 
     plt.plot(years, accuracies, label="Accuracy", marker="o")
     plt.plot(years, baselines, label="Baseline", marker="o", linestyle="--")
