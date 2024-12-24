@@ -121,9 +121,9 @@ def print_stats(
 ) -> None:
     binary_predictions = [1 if pred > 0.5 else 0 for pred in predictions]
     print(
-        f"{year:<4} - ✅ {accuracy_score(outcomes, binary_predictions) * 100:.2f}% | "
-        f"📊 {brier_score_loss(outcomes, predictions):.2f}",
-        f"| ⬜ {(sum(outcomes)/len(outcomes)) * 100:.2f}%",
+        f"{year:<4} - ✅ {accuracy_score(outcomes, binary_predictions) * 100:.3f}% | "
+        f"📊 {brier_score_loss(outcomes, predictions):.3f}",
+        f"| ⬜ {(sum(outcomes)/len(outcomes)) * 100:.3f}%",
         f"| 🔢 {len(outcomes)} Matches",
     )
 
