@@ -11,12 +11,12 @@ class Model:
         alliance_name: Optional[str] = None,
     ) -> Rating:
         mu_summed = np.sum([rating.mu for rating in ratings])
-        sigma_squared_summed = np.sum([rating.sigma**2 for rating in ratings])
+        sigma_squared_summed = np.sum([(rating.sigma**2) for rating in ratings])
 
         return Rating(
             name=alliance_name,
             mu=np.float32(mu_summed),
-            sigma=np.float32(np.sqrt(sigma_squared_summed)),
+            sigma=np.sqrt(sigma_squared_summed),
         )
 
     def predict_win(
@@ -36,7 +36,7 @@ class Model:
         red_prob = norm.cdf(
             x=(
                 (red_rating.mu - blue_rating.mu)
-                / np.sqrt(red_rating.sigma**2 + blue_rating.sigma**2)
+                / np.sqrt((red_rating.sigma**2) + (blue_rating.sigma**2))
             ),
             loc=0,
             scale=1,
