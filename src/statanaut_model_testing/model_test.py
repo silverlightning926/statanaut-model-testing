@@ -1,7 +1,8 @@
 import pandas as pd
 from json import loads
 import matplotlib.pyplot as plt
-from openskill.models import BradleyTerryFull, BradleyTerryFullRating
+from model.model import Model
+from model.rating import Rating
 from tqdm import tqdm
 from sklearn.metrics import accuracy_score, brier_score_loss
 
@@ -42,7 +43,7 @@ ratings = {}
 
 accuracy_over_time = []
 
-model = BradleyTerryFull()
+model = Model()
 
 
 def print_top_teams(
@@ -165,7 +166,7 @@ for year in range(2002, 2016):
 
         for teams in event_teams:
             if teams not in ratings:
-                ratings[teams] = BradleyTerryFullRating(
+                ratings[teams] = Rating(
                     name=teams, mu=STARTING_MU, sigma=STARTING_SIGMA
                 )
 
@@ -194,15 +195,15 @@ for year in range(2002, 2016):
             blue_ratings = [ratings[team] for team in blue_alliance]
 
             red_pred, blue_pred = model.predict_win(
-                teams=[
-                    red_ratings,
-                    blue_ratings,
-                ]
+                red_alliance=red_ratings,
+                blue_alliance=blue_ratings,
             )
 
             new_red_ratings, new_blue_ratings = model.rate(
-                teams=[red_ratings, blue_ratings],
-                scores=[red_score, blue_score],
+                red_alliance=red_ratings,
+                blue_alliance=blue_ratings,
+                red_score=red_score,
+                blue_score=blue_score,
             )
 
             for i, team in enumerate(red_alliance):
@@ -338,7 +339,7 @@ for year in range(2016, 2025):
         for teams in event_teams:
             if teams not in ratings:
                 ratings[teams] = {
-                    component: BradleyTerryFullRating(
+                    component: Rating(
                         name=f"{teams}_{component}",
                         mu=STARTING_MU,
                         sigma=STARTING_SIGMA,
@@ -376,10 +377,8 @@ for year in range(2016, 2025):
             blue_pred = 0
             for component in COMPONENTS:
                 pred = model.predict_win(
-                    teams=[
-                        [ratings[team][component] for team in red_alliance],
-                        [ratings[team][component] for team in blue_alliance],
-                    ]
+                    red_alliance=[ratings[team][component] for team in red_alliance],
+                    blue_alliance=[ratings[team][component] for team in blue_alliance],
                 )
 
                 component_scalers = score_count_to_component_scalers(score_count)
@@ -414,8 +413,10 @@ for year in range(2016, 2025):
                 ]
 
                 new_red_component_ratings, new_blue_component_ratings = model.rate(
-                    teams=[red_component_ratings, blue_component_ratings],
-                    scores=[component_red_score, component_blue_score],
+                    red_alliance=red_component_ratings,
+                    blue_alliance=blue_component_ratings,
+                    red_score=component_red_score,
+                    blue_score=component_blue_score,
                 )
 
                 for i, team in enumerate(red_alliance):
