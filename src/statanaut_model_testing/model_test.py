@@ -1,3 +1,4 @@
+import numpy as np
 import pandas as pd
 from json import loads
 import matplotlib.pyplot as plt
@@ -127,6 +128,54 @@ def print_stats(
     )
 
 
+def calculate_oprs(event_matches_df: pd.DataFrame) -> dict:
+
+    event_matches_df.reset_index(drop=True, inplace=True)
+
+    teams = sorted(
+        list(
+            filter(
+                lambda x: pd.notna(x),
+                set(event_matches_df["red1"])
+                | set(event_matches_df["red2"])
+                | set(event_matches_df["red3"])
+                | set(event_matches_df["blue1"])
+                | set(event_matches_df["blue2"])
+                | set(event_matches_df["blue3"]),
+            ),
+        ),
+    )
+
+    team_index = {team: i for i, team in enumerate(teams)}
+
+    num_teams = len(teams)
+    num_matches = len(event_matches_df)
+
+    A = np.zeros((num_matches * 2, num_teams))
+    b = np.zeros(num_matches * 2)
+
+    for i, match in event_matches_df.iterrows():
+        red_teams = [match["red1"], match["red2"], match.get("red3", None)]
+        for team in filter(pd.notna, red_teams):
+            A[i, team_index[team]] = 1
+        b[i] = match["red_score"]
+
+        blue_teams = [match["blue1"], match["blue2"], match.get("blue3", None)]
+        for team in filter(pd.notna, blue_teams):
+            A[i + num_matches, team_index[team]] = 1
+        b[i + num_matches] = match["blue_score"]
+
+    x, _, _, _ = np.linalg.lstsq(A, b)
+
+    oprs = {team: x[team_index[team]] for team in teams}
+    return oprs
+
+
+def calculate_coprs(event_matches_df: pd.DataFrame) -> dict:
+    # TODO: Implement COPR, just OPR for mulitple components
+    pass
+
+
 for year in range(2002, 2016):
     try:
         matches_df = pd.read_csv(f"../../data/matches/{year}_matches.csv")
@@ -145,7 +194,7 @@ for year in range(2002, 2016):
     for event in event_progress:
         event_progress.set_description(f"{year} - ({event:<10})")
 
-        event_matches = matches_df[matches_df["event_key"] == event]
+        event_matches: pd.DataFrame = matches_df[matches_df["event_key"] == event]
 
         event_teams = get_event_teams(matches_df, event)
 
@@ -158,7 +207,7 @@ for year in range(2002, 2016):
             else:
                 ratings[teams].sigma = SIGMA_RESET
 
-        for _, match in event_matches.iterrows():
+        for i, match in event_matches.iterrows():
             red_alliance = [match["red1"], match["red2"]]
             if pd.notna(match["red3"]):
                 red_alliance.append(match["red3"])
@@ -196,9 +245,15 @@ for year in range(2002, 2016):
             elif red_pred == blue_pred and winner == "tie":
                 correct_predictions += 1
 
+            oprs = calculate_oprs(event_matches_df=event_matches.loc[:i])
+
+            red_oprs = [oprs[team] for team in red_alliance]
+            blue_oprs = [oprs[team] for team in blue_alliance]
+
             new_red_ratings, new_blue_ratings = model.rate(
                 teams=[red_ratings, blue_ratings],
                 scores=[red_score, blue_score],
+                weights=[red_oprs, blue_oprs],
             )
 
             for i, team in enumerate(red_alliance):
@@ -299,7 +354,7 @@ for year in range(2016, 2025):
     for event in event_progress:
         event_progress.set_description(f"{year} - ({event:<10})")
 
-        event_matches = matches_df[matches_df["event_key"] == event]
+        event_matches: pd.DataFrame = matches_df[matches_df["event_key"] == event]
 
         event_teams = get_event_teams(matches_df, event)
 
@@ -318,7 +373,7 @@ for year in range(2016, 2025):
                 for component in COMPONENTS:
                     ratings[teams][component].sigma = SIGMA_RESET
 
-        for _, match in event_matches.iterrows():
+        for i, match in event_matches.iterrows():
             red_alliance = [match["red1"], match["red2"], match["red3"]]
             blue_alliance = [match["blue1"], match["blue2"], match["blue3"]]
 
@@ -364,6 +419,8 @@ for year in range(2016, 2025):
                 correct_predictions += 1
 
             for component in COMPONENTS:
+                coprs = calculate_coprs(event_matches_df=event_matches.loc[:i])
+
                 if component == "auto":
                     component_red_score = red_auto
                     component_blue_score = blue_auto
