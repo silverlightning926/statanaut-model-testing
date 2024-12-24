@@ -200,6 +200,16 @@ for year in range(2002, 2016):
             predictions.append(red_pred)
             outcomes.append(1 if winner == "red" else 0)
 
+    accuracy_over_time.append(
+        (
+            year,
+            accuracy_score(outcomes, [1 if pred > 0.5 else 0 for pred in predictions])
+            * 100,
+            (sum(outcomes) / len(outcomes)) * 100,
+            brier_score_loss(outcomes, predictions) * 100,
+        )
+    )
+
     print_stats(year, predictions, outcomes)
     print_top_teams(ratings, year)
 
@@ -370,29 +380,40 @@ for year in range(2016, 2025):
             predictions.append(red_pred)
             outcomes.append(1 if outcome == "red" else 0)
 
+    accuracy_over_time.append(
+        (
+            year,
+            accuracy_score(outcomes, [1 if pred > 0.5 else 0 for pred in predictions])
+            * 100,
+            (sum(outcomes) / len(outcomes)) * 100,
+            brier_score_loss(outcomes, predictions) * 100,
+        )
+    )
+
     print_stats(year, predictions, outcomes)
     print_top_teams(ratings, year)
 
 
 if SHOW_PLOT:
     years = [year for year, _, _, _ in accuracy_over_time]
-    accuracy = [accuracy for _, accuracy, _, _ in accuracy_over_time]
-    baseline = [baseline for _, _, baseline, _ in accuracy_over_time]
-    delta = [delta for _, _, _, delta in accuracy_over_time]
+    accuracies = [accuracy for _, accuracy, _, _ in accuracy_over_time]
+    baselines = [baseline for _, _, baseline, _ in accuracy_over_time]
+    briers = [brier for _, _, _, brier in accuracy_over_time]
 
-    plt.figure(figsize=(16, 8))
+    plt.figure(figsize=(18, 9))
 
-    plt.plot(years, accuracy, label="Model Accuracy", marker="o")
-    plt.plot(years, baseline, label="Baseline Accuracy", marker="o")
-    plt.plot(years, delta, label="Delta", marker="o")
-
-    plt.xticks(sorted(set(year for year, _, _, _ in accuracy_over_time)))
+    plt.plot(years, accuracies, label="Accuracy", marker="o")
+    plt.plot(years, baselines, label="Baseline", marker="o", linestyle="--")
+    plt.plot(years, briers, label="Brier Score", marker="o", linestyle="-.")
 
     plt.xlabel("Year")
-    plt.ylabel("Accuracy (%)")
+    plt.xticks(years, rotation=45)
 
-    plt.title("Model Accuracy Over Time")
+    plt.ylabel("%")
+
+    plt.grid()
+
+    plt.title("Model Performance Over Time")
 
     plt.legend()
-
     plt.show()
