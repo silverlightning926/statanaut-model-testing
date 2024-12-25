@@ -145,7 +145,7 @@ def print_stats(
 
 for year in range(2002, 2016):
     try:
-        matches_df = pd.read_csv(f"../../data/matches/{year}_matches.csv")
+        matches_df = pd.read_csv(f"data/matches/{year}_matches.csv")
     except FileNotFoundError:
         continue
 
@@ -307,7 +307,7 @@ def score_count_to_component_scalers(score_count: dict) -> dict:
 
 for year in range(2016, 2025):
     try:
-        matches_df = pd.read_csv(f"../../data/matches/{year}_matches.csv")
+        matches_df = pd.read_csv(f"data/matches/{year}_matches.csv")
     except FileNotFoundError:
         continue
 
